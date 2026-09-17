@@ -34,6 +34,18 @@ describe("extractJson", () => {
     expect(extractJson<{ cause: string }[]>(raw)).toEqual([{ cause: "x" }]);
   });
 
+  it("passes through an already-parsed object, which is what Workers AI returns for clean JSON", () => {
+    const parsed = [{ cause: "bad deploy" }];
+    expect(extractJson<{ cause: string }[]>(parsed)).toBe(parsed);
+    expect(extractJson<{ a: number }>({ a: 1 })).toEqual({ a: 1 });
+  });
+
+  it("returns null for a non-string, non-object reply instead of throwing", () => {
+    expect(extractJson(undefined)).toBeNull();
+    expect(extractJson(42)).toBeNull();
+    expect(extractJson(null)).toBeNull();
+  });
+
   it("returns null on malformed JSON instead of throwing", () => {
     expect(extractJson("[{cause: broken")).toBeNull();
     expect(extractJson("no json at all")).toBeNull();
