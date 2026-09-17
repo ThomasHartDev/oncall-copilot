@@ -44,9 +44,36 @@ have been a rewrite. Retrofitting also would have left nothing real to put in th
 - Only the AI binding gets faked in tests. If the Durable Object and D1 are faked too, the
   test proves nothing about the parts that are hard to get right.
 
-## What is not automated
+## Bugs that only showed up once it was deployed
 
-The deploy. My Cloudflare dashboard session was signed out when the agent went to mint a
-Workers-scoped API token, and the existing token on my box is R2-only. Verification below
-the deploy line is real: typecheck, 33 tests, and the workerd integration suite all pass
-locally.
+Two things passed 33 local tests and still broke on Cloudflare. Both are in the
+git history as their own issue and PR.
+
+**The workflow died on every hypothesis attempt** (#5). Workers AI returns
+`response` as an already-parsed object when the model emits clean JSON, and as a
+string when it wraps the JSON in prose. My code assumed a string and called
+`.match` on an object. The cast `(res as { response: string })` is what hid it:
+a cast is a claim about an external API, and nothing checks it. Every local test
+fed that function a string, because a string is what I assumed came back, so the
+test count was never going to catch it.
+
+The retry policy did behave correctly, which is the part worth keeping: three
+attempts with exponential backoff, each recorded, the failure contained to one
+step and fully visible in `wrangler workflows instances describe`.
+
+**The composer scrolled off screen** (#7). With a real four-turn conversation
+loaded, the log grew past the viewport and pushed the input below the fold. The
+log already had `overflow-y: auto`; the actual cause is that a flex child will
+not shrink below its content size without `min-height: 0`.
+
+Neither was findable from the terminal. Both came from loading the deployed page
+and using it.
+
+## Verification
+
+- 33 tests, 26 in Node and 7 inside workerd against a real Durable Object and a
+  real D1.
+- Live: a real two-turn conversation where the second turn refers back to facts
+  only present in the first, which is the Durable Object doing its job.
+- Live: a full investigation through all four Workflow steps, persisted to D1.
+- The deploy is real: https://oncall-copilot.thomas-hart.workers.dev
