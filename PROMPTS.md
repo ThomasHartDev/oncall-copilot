@@ -33,7 +33,7 @@ have been a rewrite. Retrofitting also would have left nothing real to put in th
    blocking the `workerd` postinstall, and `@cloudflare/vitest-pool-workers` 0.22 dropping
    its `/config` export in favor of a Vite plugin under Vitest 4.
 
-## Decisions I made, not the model
+## Decisions that were mine
 
 - Two coordination primitives instead of one, and the README has to justify the split.
   A reviewer at Cloudflare will care more about knowing when a Workflow is the wrong tool

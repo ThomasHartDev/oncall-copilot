@@ -9,18 +9,10 @@ restarts and retries each step on its own.
 
 Everything runs on the Workers free tier.
 
-## The four pieces
+## Why the chat and the investigation use different primitives
 
-| Requirement | What this uses | Where |
-| --- | --- | --- |
-| LLM | Llama 3.3 70B on Workers AI (`@cf/meta/llama-3.3-70b-instruct-fp8-fast`) | `src/model.ts` |
-| Workflow / coordination | Cloudflare Workflows, 4 durable steps with exponential retry | `src/workflow.ts` |
-| User input | Streaming chat UI served as a Worker static asset | `public/index.html` |
-| Memory / state | Durable Object with SQLite storage, plus D1 for finished reports | `src/conversation.ts`, `schema.sql` |
-
-## Why these two coordination primitives, not one
-
-The two halves of the app fail differently, so they get different tools.
+The two halves of this app fail differently, so they get different tools. That choice
+is the whole design, so it goes first.
 
 **Chat is a conversation with a single owner.** Every message for one session has to
 land in the same place, in order, or the history is wrong. That is a Durable Object:
@@ -40,6 +32,15 @@ passing garbage downstream.
 Using a Workflow for the chat turn would add persistence overhead to something that
 needs to stream tokens in under a second. Using a Durable Object for the investigation
 would mean hand-rolling the retry and resume logic that Workflows already provides.
+
+## What each requirement maps to
+
+| Requirement | What this uses | Where |
+| --- | --- | --- |
+| LLM | Llama 3.3 70B on Workers AI (`@cf/meta/llama-3.3-70b-instruct-fp8-fast`) | `src/model.ts` |
+| Workflow / coordination | Cloudflare Workflows, 4 durable steps with exponential retry | `src/workflow.ts` |
+| User input | Streaming chat UI served as a Worker static asset | `public/index.html` |
+| Memory / state | Durable Object with SQLite storage, plus D1 for finished reports | `src/conversation.ts`, `schema.sql` |
 
 ## Running it
 
