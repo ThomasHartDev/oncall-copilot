@@ -57,6 +57,22 @@
       summary { cursor: pointer; color: var(--dim); }
       pre { white-space: pre-wrap; word-break: break-word; margin: 10px 0 0; }
       .err { color: #e06a5a; }
+      .placeholder {
+        margin: auto;
+        text-align: center;
+        color: var(--dim);
+        font-size: 13px;
+        max-width: 46ch;
+      }
+      .placeholder.err { color: #e06a5a; }
+      .dots::after {
+        content: "";
+        animation: dots 1.2s steps(4, end) infinite;
+      }
+      @keyframes dots { 0% { content: ""; } 25% { content: "."; } 50% { content: ".."; } 75% { content: "..."; } }
+      @media (prefers-reduced-motion: reduce) {
+        .dots::after { content: "..."; animation: none; }
+      }
     </style>
   </head>
   <body>
@@ -66,7 +82,9 @@
         <p>Llama 3.3 on Workers AI. History lives in a Durable Object; deep triage runs as a Workflow.</p>
       </header>
 
-      <div class="log" id="log"></div>
+      <div class="log" id="log">
+        <p class="placeholder dots" id="placeholder">Loading your thread</p>
+      </div>
       <form id="chat">
         <input id="text" placeholder="Describe what you're seeing…" autocomplete="off" required />
         <button id="send" type="submit">Send</button>
@@ -95,21 +113,44 @@
       const log = document.getElementById("log");
       const send = document.getElementById("send");
 
+      function setPlaceholder(text, isError) {
+        const existing = document.getElementById("placeholder");
+        if (!text) {
+          existing?.remove();
+          return;
+        }
+        const el = existing ?? document.createElement("p");
+        el.id = "placeholder";
+        el.className = "placeholder" + (isError ? " err" : "");
+        el.textContent = text;
+        if (!existing) log.appendChild(el);
+      }
+
       function turn(who, text = "") {
         const el = document.createElement("div");
         el.className = "turn " + who;
         el.innerHTML = '<div class="who"></div><div class="body"></div>';
         el.querySelector(".who").textContent = who === "user" ? "you" : "copilot";
         el.querySelector(".body").textContent = text;
+        setPlaceholder("");
         log.appendChild(el);
         log.scrollTop = log.scrollHeight;
         return el.querySelector(".body");
       }
 
       fetch(`/api/history?session=${session}`)
-        .then((r) => r.json())
-        .then(({ messages }) => messages.forEach((m) => turn(m.role, m.content)))
-        .catch(() => {});
+        .then((r) => {
+          if (!r.ok) throw new Error(`history returned ${r.status}`);
+          return r.json();
+        })
+        .then(({ messages }) => {
+          if (!messages.length) {
+            setPlaceholder("Nothing here yet. Describe the symptom and what changed recently.");
+            return;
+          }
+          messages.forEach((m) => turn(m.role, m.content));
+        })
+        .catch((err) => setPlaceholder("Could not load your thread: " + err.message, true));
 
       document.getElementById("chat").addEventListener("submit", async (e) => {
         e.preventDefault();
