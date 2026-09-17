@@ -48,5 +48,5 @@ have been a rewrite. Retrofitting also would have left nothing real to put in th
 
 The deploy. My Cloudflare dashboard session was signed out when the agent went to mint a
 Workers-scoped API token, and the existing token on my box is R2-only. Verification below
-the deploy line is real: typecheck, 24 tests, and the workerd integration suite all pass
+the deploy line is real: typecheck, 30 tests, and the workerd integration suite all pass
 locally.

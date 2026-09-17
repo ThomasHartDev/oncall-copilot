@@ -43,7 +43,7 @@ would mean hand-rolling the retry and resume logic that Workflows already provid
 
 ```bash
 pnpm install
-pnpm verify            # typecheck + 24 tests
+pnpm verify            # typecheck + 30 tests
 pnpm dev               # local, needs a Cloudflare login for the AI binding
 ```
 
@@ -59,7 +59,7 @@ The API token needs Workers Scripts Edit, D1 Edit, Workers AI Edit, and Workflow
 
 ## Tests
 
-24 tests across two runners.
+30 tests across two runners.
 
 - `vitest.config.ts` runs the pure logic and the router in Node, with `cloudflare:workers`
   aliased to a stub. Fast, covers prompt trimming, the JSON extraction the model's prose
