@@ -1,0 +1,30 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "oncall-copilot",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-08-22",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": { "enabled": true },
+  "assets": { "directory": "./public", "binding": "ASSETS" },
+  "ai": { "binding": "AI" },
+  "durable_objects": {
+    "bindings": [{ "name": "CONVERSATION", "class_name": "Conversation" }]
+  },
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["Conversation"] }
+  ],
+  "workflows": [
+    {
+      "name": "incident-investigation",
+      "binding": "INVESTIGATION",
+      "class_name": "IncidentWorkflow"
+    }
+  ],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "oncall-copilot",
+      "database_id": "REPLACE_WITH_D1_ID"
+    }
+  ]
+}
