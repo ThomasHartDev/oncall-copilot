@@ -31,7 +31,7 @@ export class IncidentWorkflow extends WorkflowEntrypoint<Env, InvestigationParam
         ],
         max_tokens: 160,
       });
-      return (res as { response: string }).response.trim();
+      return String((res as { response: unknown }).response).trim();
     });
 
     const hypotheses = await step.do("hypothesize", RETRY, async () => {
@@ -46,7 +46,7 @@ export class IncidentWorkflow extends WorkflowEntrypoint<Env, InvestigationParam
         ],
         max_tokens: 640,
       });
-      const parsed = extractJson<Hypothesis[]>((res as { response: string }).response);
+      const parsed = extractJson<Hypothesis[]>((res as { response: unknown }).response);
       // A malformed model reply must fail the step so the retry policy gets a turn.
       if (!parsed?.length) throw new Error("model did not return hypothesis JSON");
       return parsed;
@@ -64,7 +64,7 @@ export class IncidentWorkflow extends WorkflowEntrypoint<Env, InvestigationParam
         ],
         max_tokens: 400,
       });
-      return (res as { response: string }).response.trim();
+      return String((res as { response: unknown }).response).trim();
     });
 
     await step.do("persist", RETRY, async () => {

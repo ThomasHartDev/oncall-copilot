@@ -28,7 +28,12 @@ export function toPrompt(history: Message[]): { role: Role; content: string }[] 
   ];
 }
 
-export function extractJson<T>(raw: string): T | null {
+// Workers AI returns `response` as a parsed object when the model emits clean JSON,
+// and as a string when it wraps the JSON in prose. Both shapes reach here.
+export function extractJson<T>(raw: unknown): T | null {
+  if (raw !== null && typeof raw === "object") return raw as T;
+  if (typeof raw !== "string") return null;
+
   const fenced = raw.match(/```(?:json)?\s*([\s\S]*?)```/);
   const body = fenced?.[1] ?? raw;
   const start = body.search(/[[{]/);

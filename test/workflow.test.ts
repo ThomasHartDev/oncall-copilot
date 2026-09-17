@@ -34,6 +34,28 @@ function harness(responses: string[]) {
   return { go, steps, run, bind, env };
 }
 
+function harnessWithRaw(responses: unknown[]) {
+  const steps: RecordedStep[] = [];
+  const run = vi.fn(async () => ({ response: responses.shift() }));
+  const bind = vi.fn(() => ({ run: async () => ({ success: true }) }));
+  const env = { AI: { run }, DB: { prepare: vi.fn(() => ({ bind })) } } as unknown as Env;
+  const step = {
+    do: async (name: string, options: unknown, fn: () => Promise<unknown>) => {
+      steps.push({ name, options });
+      return fn();
+    },
+  };
+  const wf = new IncidentWorkflow({} as never, env);
+  return {
+    go: (payload: InvestigationParams) =>
+      wf.run({ payload } as never, step as never) as Promise<{
+        summary: string;
+        hypotheses: { cause: string }[];
+        checklist: string;
+      }>,
+  };
+}
+
 const HYPOTHESES = '[{"cause":"bad deploy","signal":"error rate by version","rules_out":"flat across versions"}]';
 const payload: InvestigationParams = { incidentId: "inc-1", report: "checkout 500s since 14:05" };
 
@@ -61,6 +83,13 @@ describe("IncidentWorkflow", () => {
   it("throws on unparseable hypothesis JSON so the retry policy gets a turn", async () => {
     const { go } = harness(["s", "I'm sorry, I can't help with that.", "c"]);
     await expect(go(payload)).rejects.toThrow(/hypothesis JSON/);
+  });
+
+  it("accepts an already-parsed array, the shape Workers AI returns for clean JSON", async () => {
+    // the live bug: response came back as an object and extractJson called .match on it
+    const { go } = harnessWithRaw(["s", [{ cause: "bad deploy", signal: "x", rules_out: "y" }], "c"]);
+    const out = await go(payload);
+    expect(out.hypotheses[0]?.cause).toBe("bad deploy");
   });
 
   it("accepts hypothesis JSON wrapped in the prose the model actually emits", async () => {

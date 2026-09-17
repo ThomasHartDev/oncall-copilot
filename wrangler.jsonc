@@ -24,7 +24,7 @@
     {
       "binding": "DB",
       "database_name": "oncall-copilot",
-      "database_id": "REPLACE_WITH_D1_ID"
+      "database_id": "df37c0f7-54ea-4d73-b1ec-ae3971f96221"
     }
   ]
 }

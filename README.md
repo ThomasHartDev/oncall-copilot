@@ -5,7 +5,9 @@ breaking, it asks the questions an on-call engineer would ask, and it remembers 
 thread. For a full report, it runs a durable multi-step investigation that survives
 restarts and retries each step on its own.
 
-Live demo: see "Deploy" below. Everything runs on the Workers free tier.
+**Live: https://oncall-copilot.thomas-hart.workers.dev**
+
+Everything runs on the Workers free tier.
 
 ## The four pieces
 
@@ -43,7 +45,7 @@ would mean hand-rolling the retry and resume logic that Workflows already provid
 
 ```bash
 pnpm install
-pnpm verify            # typecheck + 30 tests
+pnpm verify            # typecheck + 33 tests
 pnpm dev               # local, needs a Cloudflare login for the AI binding
 ```
 
@@ -59,7 +61,7 @@ The API token needs Workers Scripts Edit, D1 Edit, Workers AI Edit, and Workflow
 
 ## Tests
 
-30 tests across two runners.
+33 tests across two runners.
 
 - `vitest.config.ts` runs the pure logic and the router in Node, with `cloudflare:workers`
   aliased to a stub. Fast, covers prompt trimming, the JSON extraction the model's prose
